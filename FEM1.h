@@ -74,7 +74,7 @@ class FEM
   Vector<double>        D, F; 		 //Global vectors - Solution vector (D) and Global force vector (F)
   std::vector<double>   nodeLocation;	 //Vector of the x-coordinate of nodes by global dof number
   std::map<unsigned int,double> boundary_values;	//Map of dirichlet boundary conditions
-  double                basisFunctionOrder, prob, L, g1, g2, E, A, h;
+  double                basisFunctionOrder, prob, L, g1, g2, E, A, h ,f_;
 
   //solution name array
   std::vector<std::string> nodal_solution_names;
@@ -150,22 +150,15 @@ double FEM<dim>::basis_function(unsigned int node, double xi){
     "node" specifies which node the basis function corresponds to, 
     "xi" is the point (in the bi-unit domain) where the function is being evaluated.
     You need to calculate the value of the specified basis function and order at the given quadrature pt.*/
-    double value = 1.; //Store the value of the basis function in this variable
-
-
-    for (int i = 0; i <= basisFunctionOrder ; i ++)
-    {
-        if(i!=node) {
-          value = value * (xi - xi_at_node(i)) / (xi_at_node(node) - xi_at_node(i));
-        }
+  double value = 1.; //Store the value of the basis function in this variable
+  //EDIT
+  for (int i = 0; i <= basisFunctionOrder ; i ++) {
+    if(i!=node) {
+      value = value * (xi - xi_at_node(i)) / (xi_at_node(node) - xi_at_node(i));
     }
-
-//std::cout << " Value : " << value << "   Value 1 :" << value1 << std::endl;
+  }
   /*You can use the function "xi_at_node" (defined above) to get the value of xi (in the bi-unit domain)
     at any node in the element - using deal.II's element node numbering pattern.*/
-
-  //EDIT
-
   return value;
 }
 
@@ -179,106 +172,61 @@ double FEM<dim>::basis_gradient(unsigned int node, double xi){
     Note that this is the derivative with respect to xi (not x)*/
 
   double value = 0.; //Store the value of the gradient of the basis function in this variable
-
+  // EDIT
+  double xi0, xi1, xi2, xi3, denominator;
   if (basisFunctionOrder == 1)
   {
-      if (node==0) value = -1./2.;
-      else
-      {
-          assert(node==1);
-          value = 1. / 2.;
-      }
+    if (node==0) value = -1./2.;
+    else value = 1. / 2.;
   }
 
-  double xi0, xi1, xi2;
   if (basisFunctionOrder == 2)
   {
-      xi0 = xi_at_node(node);
-      if (node==0)
-      {
-          xi1=xi_at_node(1);
-          xi2=xi_at_node(2);
-      }
-      if (node==1)
-      {
-          xi1=xi_at_node(0);
-          xi2=xi_at_node(2);
-      }
-
-      if (node==2)
-      {
-          xi1=xi_at_node(0);
-          xi2=xi_at_node(1);
-      }
-
-      double denum= (xi0-xi1)*(xi0-xi2);
-      value = (xi-xi2)/denum + (xi-xi1)/denum;
+    xi0 = xi_at_node(node);
+    if (node==0) {
+      xi1=xi_at_node(1);
+      xi2=xi_at_node(2);
+    }
+    if (node==1) {
+      xi1=xi_at_node(0);
+      xi2=xi_at_node(2);
+    }
+    if (node==2) {
+      xi1=xi_at_node(0);
+      xi2=xi_at_node(1);
+    }
+    denominator= (xi0-xi1)*(xi0-xi2);
+    value = (xi-xi2)+(xi-xi1);
+    value = value/denominator;
   }
 
-  double xi3;
   if (basisFunctionOrder == 3)
   {
-      xi0 = xi_at_node(node);
-      if (node==0)
-      {
-          xi1=xi_at_node(1);
-          xi2=xi_at_node(2);
-          xi3=xi_at_node(3);
-      }
-      if (node==1)
-      {
-          xi1=xi_at_node(0);
-          xi2=xi_at_node(2);
-          xi3=xi_at_node(3);
-      }
-
-      if (node==2)
-      {
-          xi1=xi_at_node(0);
-          xi2=xi_at_node(1);
-          xi3=xi_at_node(3);
-      }
-
-      if (node==3)
-      {
-          xi1=xi_at_node(0);
-          xi2=xi_at_node(1);
-          xi3=xi_at_node(2);
-      }
-
-      double denum= (xi0-xi1)*(xi0-xi2) * (xi0-xi3);
-      value = (xi-xi2)*(xi-xi3)/denum + (xi-xi1)*(xi-xi3)/denum+(xi-xi1)*(xi-xi2)/denum;
+    xi0 = xi_at_node(node);
+    if (node==0) {
+      xi1=xi_at_node(1);
+      xi2=xi_at_node(2);
+      xi3=xi_at_node(3);
+    }
+    if (node==1) {
+      xi1=xi_at_node(0);
+      xi2=xi_at_node(2);
+      xi3=xi_at_node(3);
+    }
+    if (node==2) {
+      xi1=xi_at_node(0);
+      xi2=xi_at_node(1);
+      xi3=xi_at_node(3);
+    }
+    if (node==3) {
+      xi1=xi_at_node(0);
+      xi2=xi_at_node(1);
+      xi3=xi_at_node(2);
+    }
+    denominator = (xi0-xi1)*(xi0-xi2) * (xi0-xi3);
+    value = (xi-xi2)*(xi-xi3)+(xi-xi1)*(xi-xi3)+(xi-xi1)*(xi-xi2);
+    value = value/denominator;
   }
-
-//  value=1.;
-//  // Calculate lagrange polynomial
-//  for (int i = 0; i <= basisFunctionOrder ; i ++)
-//  {
-//      if(i!=node)
-//      {
-//          value = value * (xi - xi_at_node(i)) / (xi_at_node(node) - xi_at_node(i));
-//      }
-//  }
-
-//  // Calculate gradient
-//  double sum=0;
-//  for (int i = 0; i <= basisFunctionOrder ; i ++)
-//  {
-//      if(i!=node)
-//      {
-//         sum += 1./ (xi - xi_at_node(i));
-//      }
-//  }
-
-
-
-
-
-  /*You can use the function "xi_at_node" (defined above) to get the value of xi (in the bi-unit domain)
-    at any node in the element - using deal.II's element node numbering pattern.*/
-
-  //EDIT
-
   return value;
 }
 
@@ -290,7 +238,6 @@ void FEM<dim>::generate_mesh(unsigned int numberOfElements){
   L = 0.1; //EDIT
   double x_min = 0.;
   double x_max = L;
-
   Point<dim,double> min(x_min),
     max(x_max);
   std::vector<unsigned int> meshDimensions (dim,numberOfElements);
@@ -331,11 +278,11 @@ template <int dim>
 void FEM<dim>::setup_system(){
 
   //Define constants for problem (Dirichlet boundary values)
-  g1 = 0.; g2 =0.001 ; //EDIT
+  g1 = 0.; g2 = 0.001 ; //EDIT
 
-  E=100000000000;
-  A=1.;
-  h=10000000000;
+  E = pow(10,11);
+  h = pow(10,10);
+  f_ = pow(10,11);
 
   //Let deal.II organize degrees of freedom
   dof_handler.distribute_dofs (fe);
@@ -364,56 +311,43 @@ void FEM<dim>::setup_system(){
   //Define quadrature rule
   /*A quad rule of 2 is included here as an example. You will need to decide
     what quadrature rule is needed for the given problems*/
-//  quadRule = 2; //EDIT - Number of quadrature points along one dimension
-//  quad_points.resize(quadRule); quad_weight.resize(quadRule);
-
-//  quad_points[0] = -sqrt(1./3.); //EDIT
-//  quad_points[1] = sqrt(1./3.); //EDIT
-
-//  quad_weight[0] = 1.; //EDIT
-//  quad_weight[1] = 1.; //EDIT
-
-  quadRule = 4;
-  quad_points.resize(quadRule);
+  quadRule = ceil((( basisFunctionOrder * 2) + 1)/2);
+  //quadRule = 2; //EDIT - Number of quadrature points along one dimension
+  quad_points.resize(quadRule); 
   quad_weight.resize(quadRule);
-  quad_points[0]= 0.339981;
-  quad_points[1]= -0.339981;
-  quad_points[2]= 0.861136;
-  quad_points[3]= -0.861136;
+  //quad_points[0] = -sqrt(1./3.); //EDIT
+  //quad_points[1] = sqrt(1./3.); //EDIT
+  //quad_weight[0] = 1.; //EDIT
+  //quad_weight[1] = 1.; //EDIT
+  if(quadRule == 2)
+  {
+    quad_points[0] = -sqrt(1./3.);
+    quad_points[1] = sqrt(1./3.);
+    quad_weight[0] = 1.;
+    quad_weight[1] = 1.;
+  }
+  else if(quadRule == 3)
+  {
+    quad_points[0] = 0; 
+    quad_points[1] = -0.7745966692414834; 
+    quad_points[2] = 0.7745966692414834;
 
-  quad_weight[0]=0.652145;
-  quad_weight[1]=0.652145;
-  quad_weight[2]=0.347855;
-  quad_weight[3]=0.347855;
-
-  quadRule=5;
-  quad_points.resize(quadRule);
-  quad_weight.resize(quadRule);
-
-  quad_weight[0]= 128./225.;
-  quad_weight[1]= (322.+13.*sqrt(70.))/900.;
-  quad_weight[2]= (322.+13.*sqrt(70.))/900.;
-  quad_weight[3]= (322.-13.*sqrt(70.))/900.;
-  quad_weight[4]= (322.-13.*sqrt(70.))/900.;
-
-  quad_points[0]=0.;
-  quad_points[1]= +1./3. * sqrt(5.-2*sqrt(10./7.));
-  quad_points[2]= -1./3. * sqrt(5.-2*sqrt(10./7.));
-  quad_points[3]= +1./3. * sqrt(5.+2*sqrt(10./7.));
-  quad_points[4]= -1./3. * sqrt(5.+2*sqrt(10./7.));
-
-
-
-//  quad_weight[1]= 0.478629;
-//  quad_weight[2]= 0.478629;
-//  quad_weight[3]= 0.236927;
-//  quad_weight[4]= 0.236927;
-//  quad_points[1]= 0.538469;
-//  quad_points[2]= -0.538469;
-//  quad_points[3]= +0.90618;
-//  quad_points[4]= -0.90618;
-
-
+    quad_weight[0] = 0.88888888; 
+    quad_weight[1] = 0.555555556; 
+    quad_weight[2] = 0.5555555556;
+  }
+  else if (quadRule == 4)
+  {
+    quad_points[0] = -0.3399810435848563; 
+    quad_points[1] = 0.3399810435848563; 
+    quad_points[2] = -0.8611363115940526;
+    quad_points[3] = 0.8611363115940526;
+    
+    quad_weight[0] = 0.6521451548625461; 
+    quad_weight[1] = 0.6521451548625461; 
+    quad_weight[2] = 0.3478548451374538;
+    quad_weight[3] = 0.3478548451374538;
+  }
   //Just some notes...
   std::cout << "   Number of active elems:       " << triangulation.n_active_cells() << std::endl;
   std::cout << "   Number of degrees of freedom: " << dof_handler.n_dofs() << std::endl;   
@@ -429,7 +363,7 @@ void FEM<dim>::assemble_system(){
   FullMatrix<double> 				Klocal (dofs_per_elem, dofs_per_elem);
   Vector<double>      			Flocal (dofs_per_elem);
   std::vector<unsigned int> local_dof_indices (dofs_per_elem);
-  double										h_e, x, f;
+  double										h_e, x;
 
 
   //loop over elements  
@@ -461,8 +395,7 @@ void FEM<dim>::assemble_system(){
                 x += nodeLocation[local_dof_indices[B]]*basis_function(B,quad_points[q]);
             }
             //EDIT - Define Flocal.
-            f=100000000000*x;
-            Flocal[A] += h_e/2.* basis_function(A,quad_points[q]) * quad_weight[q]  *f;// f
+            Flocal[A] += h_e/2.* basis_function(A,quad_points[q]) * quad_weight[q] * f_ * x;// f
         }
     }
     //Add nonzero Neumann condition, if applicable
@@ -477,37 +410,33 @@ void FEM<dim>::assemble_system(){
 
     //Loop over local DOFs and quadrature points to populate Klocal
     Klocal = 0;
-    for(unsigned int A=0; A<dofs_per_elem; A++)
-    {
-        for(unsigned int B=0; B<dofs_per_elem; B++)
-        {
-            for(unsigned int q=0; q<quadRule; q++)
-            {
-                //EDIT - Define Klocal.
-                Klocal[A][B] += 2. * E / h_e *  basis_gradient(A,quad_points[q]) * basis_gradient(B,quad_points[q]) * quad_weight[q];
-            }
+    for(unsigned int A=0; A<dofs_per_elem; A++) {
+      for(unsigned int B=0; B<dofs_per_elem; B++) {
+        for(unsigned int q=0; q<quadRule; q++) {
+          //EDIT - Define Klocal.
+          Klocal[A][B] += (2*E)/h_e* basis_gradient(A,quad_points[q])*basis_gradient(B,quad_points[q])*quad_weight[q];
         }
+      }
     }
 
     //Assemble local K and F into global K and F
     //You will need to used local_dof_indices[A]
-    for(unsigned int A=0; A<dofs_per_elem; A++)
-    {
-
+    int global_pos_A, global_pos_B;
+    for(unsigned int A=0; A<dofs_per_elem; A++) {
       //EDIT - add component A of Flocal to the correct location in F
       /*Remember, local_dof_indices[A] is the global degree-of-freedom number
-	corresponding to element node number A*/
-        F[local_dof_indices[A]] += Flocal[A];
-      for(unsigned int B=0; B<dofs_per_elem; B++)
-      {
-	//EDIT - add component A,B of Klocal to the correct location in K (using local_dof_indices)
-	/*Note: K is a sparse matrix, so you need to use the function "add".
-	  For example, to add the variable C to K[i][j], you would use:
-	  K.add(i,j,C);*/
-            K.add(local_dof_indices[A],local_dof_indices[B],Klocal[A][B]);
+	    corresponding to element node number A*/
+      global_pos_A = local_dof_indices[A];
+      F[global_pos_A] = F[global_pos_A] + Flocal[A];
+      for(unsigned int B=0; B<dofs_per_elem; B++) {
+        global_pos_B = local_dof_indices[B];
+        //EDIT - add component A,B of Klocal to the correct location in K (using local_dof_indices)
+        /*Note: K is a sparse matrix, so you need to use the function "add".
+        For example, to add the variable C to K[i][j], you would use:
+        K.add(i,j,C);*/
+        K.add(global_pos_A,global_pos_B,Klocal[A][B]);
       }
     }
-
   }
 
   //Apply Dirichlet boundary conditions
@@ -574,20 +503,17 @@ double FEM<dim>::l2norm_of_error(){
           u_h += D[local_dof_indices[B]]*basis_function(B,quad_points[q]);
 
       }
-      //      u_exact = 0.5*(L-x)*(x);
-      if (prob==1)
-      u_exact = -x*x*x*100000000000/(6.*E) + (g2-g1+L*L*L*100000000000/(6.*E))/L *x + g1;
-
-      if (prob==2)
-          u_exact = -x*x*x  / (6. * E) + (h+0.5*L*L)*x + g1;
-
-      l2norm += (u_h-u_exact)*(u_h-u_exact) * h_e / 2. * quad_weight[q];
-//      std::cout << "x = " << x << "   u_exact = " << u_exact << "   uh=" << u_h << std::endl;
+      if (prob==1) {
+        u_exact = -x*x*x*f_/(6.*E) + (g2-g1+L*L*L*f_/(6.*E))/L *x + g1;
+      }
+      else if (prob==2) {
+        u_exact = -x*x*x*f_/(6.*E) + ((h+(f_*L*L/2))/E)*x + g1;
+      }
+      l2norm += (u_h-u_exact)*(u_h-u_exact) * h_e / 2 * quad_weight[q];
       //EDIT - Find the l2-norm of the error through numerical integration.
       /*This includes evaluating the exact solution at the quadrature points*/
 							
     }
   }
-
   return sqrt(l2norm);
 }
