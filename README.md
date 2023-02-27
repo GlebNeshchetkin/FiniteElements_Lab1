@@ -1,4 +1,13 @@
 # FiniteElements_Lab1
+Выполнили: Нещеткин Глеб, Жаравина Полина (19ПМИ-1) \
+\
+**L2 norm values:** \
+prob.1, linear: 1.51876e-07 \
+prob.1, quadratic: 1.52145e-08 \
+prob.1, cubic: 1.76889e-08 \
+prob.2, linear: 1.51976e-07 \
+prob.2, quadratic: 1.52109e-08 \
+prob.2, cubic: 4.50844e-08
 
 ## u_exact
 $$u(z) = \frac{1}{E} \left[ - \int_{0}^{z} \int_{0}^{y}fdxdy + E\frac{du}{dx}|_0z+Eu_0 \right]$$
