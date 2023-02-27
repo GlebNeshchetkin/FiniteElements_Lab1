@@ -96,10 +96,6 @@ fe (FE_Q<dim>(order), dim),
     std::cout << "Error: problem number should be 1 or 2.\n";
     exit(0);
   }
-
-
-
-
   //Nodal Solution names - this is for writing the output file
   for (unsigned int i=0; i<dim; ++i){
     nodal_solution_names.push_back("u");
@@ -131,7 +127,6 @@ double FEM<dim>::xi_at_node(unsigned int dealNode){
           xi=-1/sqrt(5.);
       else if (basisFunctionOrder==3 && dealNode==3)
           xi=+1/sqrt(5.);
-//    xi = -1. + 2.*(dealNode-1.)/basisFunctionOrder;
   }
   else{
     std::cout << "Error: you input node number "
